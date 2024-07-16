@@ -1,0 +1,80 @@
+using System;
+using System.IO;
+using System.Text;
+
+class Program
+{
+    static int CountLines(string filePath) => File.ReadAllLines(filePath).Length;
+
+    static int CountCharacter(string filePath, char character) =>
+        File.ReadAllText(filePath).Split(character).Length - 1;
+
+    static int CountWords(string filePath) =>
+        File.ReadAllText(filePath).Split(new char[] { ' ', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries).Length;
+
+    static void ReadAndWriteUTF8(string inputFile, string outputFile)
+    {
+        string content = File.ReadAllText(inputFile, Encoding.UTF8);
+        File.WriteAllText(outputFile, content, Encoding.UTF8);
+    }
+
+    static void ReadAndWriteUTF16(string inputFile, string outputFile)
+    {
+        string content = File.ReadAllText(inputFile, Encoding.Unicode);
+        File.WriteAllText(outputFile, content, Encoding.Unicode);
+    }
+
+    static void WriteArrayToBinaryFile(string filePath, double[,] array)
+    {
+        using (var writer = new BinaryWriter(File.Open(filePath, FileMode.Create)))
+        {
+            int rows = array.GetLength(0), cols = array.GetLength(1);
+            writer.Write(rows);
+            writer.Write(cols);
+            for (int i = 0; i < rows; i++)
+                for (int j = 0; j < cols; j++)
+                    writer.Write(array[i, j]);
+        }
+    }
+
+    static double[,] ReadArrayFromBinaryFile(string filePath)
+    {
+        using (var reader = new BinaryReader(File.Open(filePath, FileMode.Open)))
+        {
+            int rows = reader.ReadInt32(), cols = reader.ReadInt32();
+            double[,] array = new double[rows, cols];
+            for (int i = 0; i < rows; i++)
+                for (int j = 0; j < cols; j++)
+                    array[i, j] = reader.ReadDouble();
+            return array;
+        }
+    }
+
+    static void Main()
+    {
+        string path = "Program.cs";
+        Console.WriteLine("Số dòng: " + CountLines(path));
+        Console.WriteLine("Số kí tự 'a': " + CountCharacter(path, 'a'));
+        Console.WriteLine("Số từ: " + CountWords(path));
+
+        ReadAndWriteUTF8("vd1_read.txt", "vd1_ghi.txt");
+        Console.WriteLine("Đã ghi file UTF-8.");
+        
+        ReadAndWriteUTF16("vd1_read.txt", "vd1_ghi.txt");
+        Console.WriteLine("Đã ghi file UTF-16.");
+
+        double[,] array = { { 1.1, 2.2, 3.3 }, { 4.4, 5.5, 6.6 } };
+        string binaryFilePath = "a2d.dat";
+        WriteArrayToBinaryFile(binaryFilePath, array);
+        double[,] newArray = ReadArrayFromBinaryFile(binaryFilePath);
+        Console.WriteLine("Mảng đã đọc từ file:");
+        for (int i = 0; i < newArray.GetLength(0); i++)
+        {
+            for (int j = 0; j < newArray.GetLength(1); j++)
+            {
+                Console.Write(newArray[i, j] + " ");
+            }
+            Console.WriteLine();
+        }
+    }
+}
